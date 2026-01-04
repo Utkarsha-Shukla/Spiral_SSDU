@@ -8,8 +8,6 @@ parser = parser_ops.get_parser()
 args = parser.parse_args()
 
 
-tf.compat.v1.disable_eager_execution()
-
 def test_graph(directory):
     """
     This function creates a test graph for testing
@@ -29,8 +27,8 @@ def test_graph(directory):
     nw_output = tf.compat.v1.identity(nw_output, name='nw_output')
     nw_kspace_output = tf.compat.v1.identity(nw_kspace_output, name='nw_kspace_output')
     all_intermediate_outputs = tf.compat.v1.identity(all_intermediate_outputs, name='all_intermediate_outputs')
-    x0 = tf.compat.v1.identity(x0, name='x0')
-    mu = tf.compat.v1.identity(mu, name='mu')
+    x0 = tf.identity(x0, name='x0')
+    mu = tf.identity(mu, name='mu')
 
     # %% saves computational graph for test
     saver = tf.compat.v1.train.Saver()

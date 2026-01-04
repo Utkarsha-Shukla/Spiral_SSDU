@@ -11,6 +11,12 @@ import parser_ops
 import masks.ssdu_masks as ssdu_masks
 import UnrollNet
 
+
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.compat.v1.Session(config=config)
+tf.config.run_functions_eagerly(True)
+
 parser = parser_ops.get_parser()
 args = parser.parse_args()
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
@@ -29,8 +35,8 @@ test_graph_generator = tf_utils.test_graph(directory)
 #...........................................................................d....
 start_time = time.time()
 print('.................SSDU Training.....................')
-tf.reset_default_graph()
-config = tf.ConfigProto()
+tf.compat.v1.reset_default_graph()
+config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
 config.allow_soft_placement = True
 
@@ -91,18 +97,19 @@ print('\n size of ref kspace: ', ref_kspace.shape, ', nw_input: ', nw_input.shap
 
 # %% set the batch size
 total_batch = int(np.floor(np.float32(nw_input.shape[0]) / (args.batchSize)))
-kspaceP = tf.placeholder(tf.float32, shape=(None, None, None, None, 2), name='refkspace')
-sens_mapsP = tf.placeholder(tf.complex64, shape=(None, None, None, None), name='sens_maps')
-trn_maskP = tf.placeholder(tf.complex64, shape=(None, None, None), name='trn_mask')
-loss_maskP = tf.placeholder(tf.complex64, shape=(None, None, None), name='loss_mask')
-nw_inputP = tf.placeholder(tf.float32, shape=(None, args.nrow_GLOB, args.ncol_GLOB, 2), name='nw_input')
+kspaceP = tf.compat.v1.placeholder(tf.float32, shape=(None, None, None, None, 2), name='refkspace')
+sens_mapsP = tf.compat.v1.placeholder(tf.complex64, shape=(None, None, None, None), name='sens_maps')
+trn_maskP = tf.compat.v1.placeholder(tf.complex64, shape=(None, None, None), name='trn_mask')
+loss_maskP = tf.compat.v1.placeholder(tf.complex64, shape=(None, None, None), name='loss_mask')
+nw_inputP = tf.compat.v1.placeholder(tf.float32, shape=(None, args.nrow_GLOB, args.ncol_GLOB, 2), name='nw_input')
 
 # %% creating the dataset
 dataset = tf.data.Dataset.from_tensor_slices((kspaceP, nw_inputP, sens_mapsP, trn_maskP, loss_maskP))
 dataset = dataset.shuffle(buffer_size=10 * args.batchSize)
 dataset = dataset.batch(args.batchSize)
 dataset = dataset.prefetch(args.batchSize)
-iterator = dataset.make_initializable_iterator()
+
+iterator = tf.compat.v1.dataset.make_initializable_iterator()
 ref_kspace_tensor, nw_input_tensor, sens_maps_tensor, trn_mask_tensor, loss_mask_tensor = iterator.get_next('getNext')
 
 # %% make training model
@@ -111,16 +118,17 @@ scalar = tf.constant(0.5, dtype=tf.float32)
 loss = tf.multiply(scalar, tf.norm(ref_kspace_tensor - nw_output_kspace) / tf.norm(ref_kspace_tensor)) + \
        tf.multiply(scalar, tf.norm(ref_kspace_tensor - nw_output_kspace, ord=1) / tf.norm(ref_kspace_tensor, ord=1))
 
-all_trainable_vars = tf.reduce_sum([tf.reduce_prod(v.shape) for v in tf.trainable_variables()])
-update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-optimizer = tf.train.AdamOptimizer(learning_rate=args.learning_rate).minimize(loss)
+#all_trainable_vars = tf.reduce_sum([tf.reduce_prod(v.shape) for v in tf.trainable_variables()])
+all_trainable_vars = tf.reduce_sum([tf.size(v) for v in tf.compat.v1.trainable_variables()])
+update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
+optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=args.learning_rate).minimize(loss)
 
-saver = tf.train.Saver(max_to_keep=100)
+saver = tf.compat.v1.train.Saver(max_to_keep=100)
 sess_trn_filename = os.path.join(directory, 'model')
 totalLoss = []
 avg_cost = 0
-with tf.Session(config=config) as sess:
-    sess.run(tf.global_variables_initializer())
+with tf.compat.v1.Session(config=config) as sess:
+    sess.run(tf.compat.v1.global_variables_initializer())
     print('SSDU Parameters: Epochs: ', args.epochs, ', Batch Size:', args.batchSize,
           ', Number of trainable parameters: ', sess.run(all_trainable_vars))
     feedDict = {kspaceP: ref_kspace, nw_inputP: nw_input, trn_maskP: trn_mask, loss_maskP: loss_mask, sens_mapsP: sens_maps}
@@ -139,7 +147,7 @@ with tf.Session(config=config) as sess:
             totalLoss.append(avg_cost)
             print("Epoch:", ep, "elapsed_time =""{:f}".format(toc), "cost =", "{:.3f}".format(avg_cost))
 
-        except tf.errors.OutOfRangeError:
+        except tf.compat.v1.errors.OutOfRangeError:
             pass
 
         if (np.mod(ep, 10) == 0):

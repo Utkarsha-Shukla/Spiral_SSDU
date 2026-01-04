@@ -1,14 +1,8 @@
-# import tensorflow as tf
-
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 import data_consistency as ssdu_dc
 import tf_utils
 import models.networks as networks
 import parser_ops
-import tensorflow as tf1
-
-tf.disable_eager_execution()
-
 
 parser = parser_ops.get_parser()
 args = parser.parse_args()
@@ -19,8 +13,8 @@ class UnrolledNet():
 
     Parameters
     ----------
-    input_x: batch_size x nrow x ncol x 2, tf.float32
-    sens_maps: batch_size x ncoil x nrow x ncol, tf.complex64
+    input_x: batch_size x nrow x ncol x 2
+    sens_maps: batch_size x ncoil x nrow x ncol
 
     trn_mask: batch_size x nrow x ncol, used in data consistency units
     loss_mask: batch_size x nrow x ncol, used to define loss in k-space
@@ -49,15 +43,14 @@ class UnrolledNet():
         self.model = self.Unrolled_SSDU()
 
     def Unrolled_SSDU(self):
-        x, denoiser_output, dc_output = self.input_x, self.input_x, self.input_x  #current image estimate, denoised_o/p, data_consistency_o/p
-        all_intermediate_results = [[0 for _ in range(2)] for _ in range(args.nb_unroll_blocks)]  #[0]: denoiser_o/p, [1]: data consistency o/p
+        x, denoiser_output, dc_output = self.input_x, self.input_x, self.input_x
+        all_intermediate_results = [[0 for _ in range(2)] for _ in range(args.nb_unroll_blocks)]
 
-        #
-        mu_init = tf.constant(0., dtype=tf.float32)  #No weighting yet
-        x0 = ssdu_dc.dc_block(self.input_x, self.sens_maps, self.trn_mask, mu_init) 
+        mu_init = tf.constant(0., dtype=tf.float32)
+        x0 = ssdu_dc.dc_block(self.input_x, self.sens_maps, self.trn_mask, mu_init)
 
         with tf.name_scope('SSDUModel'):
-            with tf.compat.v1.variable_scope('Weights', reuse=tf.AUTO_REUSE):
+            with tf.compat.v1.variable_scope('Weights', reuse=tf.compat.v1.AUTO_REUSE):
                 for i in range(args.nb_unroll_blocks):
                     x = networks.ResNet(x, args.nb_res_blocks)
                     denoiser_output = x

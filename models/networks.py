@@ -43,7 +43,8 @@ def ResNet(input_data, nb_res_blocks):
 
     """
 
-    conv_filters = dict([('w1', (3, 3, 2, 64)), ('w2', (3, 3, 64, 64)), ('w3', (3, 3, 64, 2))])
+    # conv_filters = dict([('w1', (3, 3, 2, 64)), ('w2', (3, 3, 64, 64)), ('w3', (3, 3, 64, 2))])
+    conv_filters = dict([('w1', (3, 3, 2, 32)), ('w2', (3, 3, 32, 32)), ('w3', (3, 3, 32, 2))])
     intermediate_outputs = {}
 
     with tf.compat.v1.variable_scope('FirstLayer'):

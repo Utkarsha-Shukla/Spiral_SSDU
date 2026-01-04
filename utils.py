@@ -1,6 +1,8 @@
 import numpy as np
 from skimage.metrics import structural_similarity as compare_ssim
 
+
+
 def get_train_directory(args):
     """
     Parameters
@@ -13,7 +15,6 @@ def get_train_directory(args):
     kspace and sensitivity maps should have size of nSlices x nrow x ncol x ncoil and mask should have size of nrow x ncol
 
     """
-    #ile_brain_AXT2_210_6001515.h5
 
     if args.data_opt == 'Coronal_PD':
 
@@ -22,13 +23,13 @@ def get_train_directory(args):
 
     elif args.data_opt == 'Coronal_PDFS':
 
-        kspace_dir = '/home/woody/mfdp/mfdp120h/multicoil_train/file_brain_AXT2_210_6001515.h5'
-        coil_dir = '/home/hpc/mfdp/mfdp120h/SSDU/SSDU-main/SSDU-main/data/file_sens_brain_AXT2_210_6001515.h5'
+        kspace_dir = '/home/woody/mfdp/mfdp120h/multicoil_train/file_brain_AXT2_210_6001944.h5'
+        coil_dir = '/home/hpc/mfdp/mfdp120h/SSDU-main-GIT/code/sens_maps_AXT2_210_6001944.h5'
 
     else:
         raise ValueError('Invalid data option')
 
-    mask_dir = '/home/hpc/mfdp/mfdp120h/SSDU/SSDU-main/SSDU-main/data/us_mask/kspace_mask_r2.mat'
+    mask_dir = '/home/hpc/mfdp/mfdp120h/SSDU-main-GIT/code/masks/kspace_mask_r2.mat'
 
     print('\n kspace dir : ', kspace_dir, '\n \n coil dir :', coil_dir, '\n \n mask dir: ', mask_dir)
 

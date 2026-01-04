@@ -1,7 +1,6 @@
 import numpy as np
 import utils
 
-
 class ssdu_masks():
     """
 
@@ -32,8 +31,6 @@ class ssdu_masks():
 
     def Gaussian_selection(self, input_data, input_mask, std_scale=4, num_iter=1):
 
-        # print("Entered Gaussian_selection", flush=True)
-        # print("input_mask:", input_mask.shape)  # should be (396,768)
         nrow, ncol = input_data.shape[0], input_data.shape[1]
         center_kx = int(utils.find_center_ind(input_data, axes=(1, 2)))
         center_ky = int(utils.find_center_ind(input_data, axes=(0, 2)))
@@ -56,12 +53,8 @@ class ssdu_masks():
             if (0 <= indx < nrow and 0 <= indy < ncol and temp_mask[indx, indy] == 1 and loss_mask[indx, indy] != 1):
                 loss_mask[indx, indy] = 1
                 count = count + 1
-                
-        # print("trn_mask:", trn_mask.shape)  # should be (396,768)
-        # print("loss_mask:", loss_mask.shape)  # should be (396,768)
+
         trn_mask = input_mask - loss_mask
-        # print("trn_mask:", trn_mask.shape)  # should be (396,768)
-        # print("Exited Gaussian_selection", flush=True)
 
         return trn_mask, loss_mask
 
@@ -81,7 +74,7 @@ class ssdu_masks():
 
         pr = np.ndarray.flatten(temp_mask)
         ind = np.random.choice(np.arange(nrow * ncol),
-                               size=int(np.count_nonzero(pr) * self.rho), replace=False, p=pr / np.sum(pr))
+                               size=np.int(np.count_nonzero(pr) * self.rho), replace=False, p=pr / np.sum(pr))
 
         [ind_x, ind_y] = utils.index_flatten2nd(ind, (nrow, ncol))
 

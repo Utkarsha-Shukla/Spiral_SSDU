@@ -25,18 +25,10 @@ class data_consistency():
         """
         Performs (E^h*E+ mu*I) x
         """
-
         with tf.name_scope('EhE'):
-            print("################################ EhE_Op ############################")
-            print("img", img.shape, img.dtype)
-            print("self.sens_maps", self.sens_maps.shape, self.sens_maps.dtype)
             coil_imgs = self.sens_maps * img
-            print("coil_imgs", coil_imgs.shape, coil_imgs.dtype)
             kspace = tf_utils.tf_fftshift(tf.signal.fft2d(tf_utils.tf_ifftshift(coil_imgs))) / self.scalar
             masked_kspace = kspace * self.mask
-            print("kspace", kspace.shape, kspace.dtype)
-            print("self.mask", self.mask.shape, self.mask.dtype)
-            print("masked_kspace", masked_kspace.shape, masked_kspace.dtype)
             image_space_coil_imgs = tf_utils.tf_ifftshift(tf.signal.ifft2d(tf_utils.tf_fftshift(masked_kspace))) * self.scalar
             image_space_comb = tf.reduce_sum(image_space_coil_imgs * tf.math.conj(self.sens_maps), axis=0)
 
@@ -73,7 +65,7 @@ def conj_grad(input_elems, mu_param):
     """
     Parameters
     ----------
-    input_data : contains tuple of  reg output rhs = E^h*y + mu*z , sens_maps and mask (adjoint(kspace)+ penalty*previous iteration result(image))
+    input_data : contains tuple of  reg output rhs = E^h*y + mu*z , sens_maps and mask
     rhs = nrow x ncol x 2
     sens_maps : coil sensitivity maps ncoil x nrow x ncol
     mask : nrow x ncol
@@ -88,16 +80,9 @@ def conj_grad(input_elems, mu_param):
     """
 
     rhs, sens_maps, mask = input_elems
-    print("################################ Conj_grad ######################")
-    print("rhs", rhs.shape, rhs.dtype)
-    print("sens_maps", sens_maps.shape, sens_maps.dtype)
-    print("mask", mask.shape, mask.dtype)
-    #US
-    mu_param = tf.complex(
-    tf.reshape(mu_param, [1, 1, 1]),  # 🔴 FORCE BROADCAST SHAPE
-    0.
-)
+    mu_param = tf.complex(mu_param, 0.)
     rhs = tf_utils.tf_real2complex(rhs)
+
     Encoder = data_consistency(sens_maps, mask)
     cond = lambda i, *_: tf.less(i, args.CG_Iter)
 
@@ -123,12 +108,13 @@ def conj_grad(input_elems, mu_param):
                            shape_invariants=(
                                             tf.TensorShape([]),                 # i
                                             tf.TensorShape([]),                 # rsold
-                                            tf.TensorShape([None, None, None]), # x
-                                            tf.TensorShape([None, None, None]), # r
-                                            tf.TensorShape([None, None, None]), # p
-                                            tf.TensorShape([1, 1, 1])            # mu
+                                            tf.TensorShape([None, None]), # x
+                                            tf.TensorShape([None, None]), # r
+                                            tf.TensorShape([None, None]), # p
+                                            tf.TensorShape([])            # mu
                                         ),
                            name='CGloop', parallel_iterations=1)[2]
+
 
     return tf_utils.tf_complex2real(cg_out)
 
